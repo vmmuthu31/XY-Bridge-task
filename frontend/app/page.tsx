@@ -4,12 +4,15 @@ import ChainSelector from "./components/ChainSelector";
 import QuoteForm from "./components/QuoteForm";
 import { getParams, ParamsData } from "../services/apiService";
 import Navbar from "./components/Navbar";
+import { useAccount } from "wagmi";
 
 const Home: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
   const [srcChainId, setSrcChainId] = useState<number | null>(null);
   const [dstChainId, setDstChainId] = useState<number | null>(null);
   const [params, setParams] = useState<any>(null);
+  const { address } = useAccount();
+  console.log("Address:", address);
   const handleChainChange = (
     chainId: number,
     type: "source" | "destination"
@@ -34,7 +37,7 @@ const Home: React.FC = () => {
         dstChainId: quote.routes[0].dstChainId,
         dstQuoteTokenAddress: quote.routes[0].dstQuoteTokenAddress,
         slippage: quote.routes[0].slippage,
-        receiver: "0x2687B4FDFa0C4290eD754Bfea807DC6a50CE286E",
+        receiver: address?.toString(),
         commissionRate: 0,
         bridgeProvider: quote.routes[0].bridgeDescription.provider,
         srcBridgeTokenAddress:
