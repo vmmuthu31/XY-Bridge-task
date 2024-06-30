@@ -1,19 +1,30 @@
 {
   "name": "bridge-backend",
   "version": "1.0.0",
+  "description": "A backend service for the Bridge application using Node.js and Express.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "mocha"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "bridge",
+    "backend",
+    "nodejs",
+    "express"
+  ],
+  "author": "vairamuthu",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "axios": "^1.7.2",
-    "chai": "^5.1.1",
+    "chai": "^4.2.0",
     "express": "^4.19.2",
     "mocha": "^10.5.2",
     "nodemon": "^3.1.4"
+  },
+  "devDependencies": {
+    "chai-http": "^4.3.0"
   }
 }

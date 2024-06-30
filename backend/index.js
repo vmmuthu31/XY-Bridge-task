@@ -1,14 +1,16 @@
-const express = require("express");
+import express from "express";
+import tokenRoutes from "./routes/tokenRoutes.js";
+import quoteRoutes from "./routes/quoteRoutes.js";
+
 const app = express();
-const tokenRoutes = require("./routes/tokenRoutes.js");
-const quoteRoutes = require("./routes/quoteRoutes");
-
 app.use(express.json());
-app.use("/api/tokens", tokenRoutes);
-app.use("/api/quotes", quoteRoutes);
+app.use("/api", tokenRoutes);
+app.use("/api", quoteRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;
