@@ -27,7 +27,7 @@ export interface ParamsData {
   dstChainId: number;
   dstQuoteTokenAddress: string;
   slippage: number;
-  receiver: string;
+  receiver: string | undefined;
   commissionRate: number;
   bridgeProvider: string;
   srcBridgeTokenAddress: string;
