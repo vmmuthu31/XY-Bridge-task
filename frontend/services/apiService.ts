@@ -1,3 +1,4 @@
+import { API_URL } from "@/constants/domain";
 import axios from "axios";
 
 export interface Chain {
@@ -35,8 +36,6 @@ export interface ParamsData {
   srcSwapProvider: string;
   dstSwapProvider: string;
 }
-
-const API_URL = "https://xy-bridge-backend.vercel.app/api";
 
 export const getChains = async (): Promise<Chain[]> => {
   const response = await axios.get(`${API_URL}/chains`);

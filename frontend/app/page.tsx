@@ -83,8 +83,10 @@ const Home: React.FC = () => {
               >
                 Get Transaction Parameters
               </button>
-              <h2 className="text-xl font-semibold mb-4">Bridge Call</h2>
+              <h2 className="text-xl mt-5 font-semibold mb-4">Bridge Call</h2>
               <pre className="p-4 bg-gray-100 rounded-lg">
+                <p>Gas Estimation:{quote.routes[0].estimatedGas}</p>
+                <br />
                 {JSON.stringify(params, null, 2)}
               </pre>
             </div>
