@@ -36,7 +36,7 @@ export interface ParamsData {
   dstSwapProvider: string;
 }
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://xy-bridge-backend.vercel.app/api";
 
 export const getChains = async (): Promise<Chain[]> => {
   const response = await axios.get(`${API_URL}/chains`);
