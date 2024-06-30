@@ -40,7 +40,7 @@ const ChainSelector: React.FC<ChainSelectorProps> = ({ onChainChange }) => {
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 mt-10">
       <h2 className="text-xl font-semibold mb-4">
         Select Source and Destination Chains
       </h2>

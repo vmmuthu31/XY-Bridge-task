@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import ChainSelector from "./components/ChainSelector";
 import QuoteForm from "./components/QuoteForm";
 import { getParams, ParamsData } from "../services/apiService";
+import Navbar from "./components/Navbar";
 
 const Home: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
@@ -51,9 +52,8 @@ const Home: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        Bridge Application
-      </h1>
+      <Navbar />
+
       <ChainSelector onChainChange={handleChainChange} />
       {srcChainId && dstChainId && (
         <QuoteForm
@@ -89,4 +89,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-``;
