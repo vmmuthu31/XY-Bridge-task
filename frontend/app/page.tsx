@@ -32,22 +32,27 @@ const Home: React.FC = () => {
 
   const handleParams = async () => {
     if (quote) {
+      const route = quote.routes[0];
       const paramsData: ParamsData = {
-        srcChainId: quote.routes[0].srcChainId,
-        srcQuoteTokenAddress: quote.routes[0].srcQuoteTokenAddress,
-        srcQuoteTokenAmount: quote.routes[0].srcQuoteTokenAmount,
-        dstChainId: quote.routes[0].dstChainId,
-        dstQuoteTokenAddress: quote.routes[0].dstQuoteTokenAddress,
-        slippage: quote.routes[0].slippage,
+        srcChainId: route.srcChainId,
+        srcQuoteTokenAddress: route.srcQuoteTokenAddress,
+        srcQuoteTokenAmount: route.srcQuoteTokenAmount,
+        dstChainId: route.dstChainId,
+        dstQuoteTokenAddress: route.dstQuoteTokenAddress,
+        slippage: route.slippage,
         receiver: address?.toString(),
         commissionRate: 0,
-        bridgeProvider: quote.routes[0].bridgeDescription.provider,
-        srcBridgeTokenAddress:
-          quote.routes[0].bridgeDescription.srcBridgeTokenAddress,
-        dstBridgeTokenAddress:
-          quote.routes[0].bridgeDescription.dstBridgeTokenAddress,
-        srcSwapProvider: quote.routes[0].srcSwapDescription?.provider || "",
-        dstSwapProvider: quote.routes[0].dstSwapDescription?.provider || "",
+        bridgeProvider: route.bridgeDescription.provider,
+        srcBridgeTokenAddress: route.bridgeDescription.srcBridgeTokenAddress,
+        dstBridgeTokenAddress: route.bridgeDescription.dstBridgeTokenAddress,
+        srcSwapProvider:
+          route.srcQuoteTokenAddress !== route.srcBridgeTokenAddress
+            ? route.srcSwapDescription?.provider || ""
+            : "",
+        dstSwapProvider:
+          route.dstQuoteTokenAddress !== route.dstBridgeTokenAddress
+            ? route.dstSwapDescription?.provider || ""
+            : "",
       };
       const params = await getParams(paramsData);
       console.log("Transaction Parameters:", params);
@@ -64,6 +69,7 @@ const Home: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">
             Please connect your wallet to proceed.
           </h2>
+          <ConnectButton />
         </div>
       ) : (
         <>
@@ -85,7 +91,7 @@ const Home: React.FC = () => {
               </button>
               <h2 className="text-xl mt-5 font-semibold mb-4">Bridge Call</h2>
               <pre className="p-4 bg-gray-100 rounded-lg">
-                <p>Gas Estimation:{quote.routes[0].estimatedGas}</p>
+                <p>Gas Estimation: {quote.routes[0].estimatedGas}</p>
                 <br />
                 {JSON.stringify(params, null, 2)}
               </pre>

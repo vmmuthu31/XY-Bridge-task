@@ -5,6 +5,7 @@ import {
   QuoteParams,
   Token,
 } from "../../services/apiService";
+import { ethers } from "ethers";
 
 interface QuoteFormProps {
   srcChainId: number | null;
@@ -50,10 +51,22 @@ const QuoteForm: React.FC<QuoteFormProps> = ({
         selectedDstToken &&
         srcQuoteTokenAmount
       ) {
+        let srcQuoteTokenAmountInWei;
+        if (selectedSrcToken === "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
+          // Address for ETH
+          srcQuoteTokenAmountInWei = ethers.utils
+            .parseEther(srcQuoteTokenAmount)
+            .toString();
+        } else {
+          srcQuoteTokenAmountInWei = ethers.utils
+            .parseUnits(srcQuoteTokenAmount, 6)
+            .toString();
+        }
+
         const quoteParams: QuoteParams = {
           srcChainId,
           srcQuoteTokenAddress: selectedSrcToken,
-          srcQuoteTokenAmount,
+          srcQuoteTokenAmount: srcQuoteTokenAmountInWei,
           dstChainId,
           dstQuoteTokenAddress: selectedDstToken,
           slippage: 1,
