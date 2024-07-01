@@ -6,6 +6,7 @@ import { getParams, ParamsData } from "../services/apiService";
 import Navbar from "./components/Navbar";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import BridgeUI from "./components/BridgeUI";
 
 const Home: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
@@ -73,7 +74,7 @@ const Home: React.FC = () => {
         </div>
       ) : (
         <>
-          <ChainSelector onChainChange={handleChainChange} />
+          {/* <ChainSelector onChainChange={handleChainChange} />
           {srcChainId && dstChainId && (
             <QuoteForm
               srcChainId={srcChainId}
@@ -104,7 +105,8 @@ const Home: React.FC = () => {
                 No quote available for the selected tokens.
               </pre>
             </div>
-          )}
+          )} */}
+          <BridgeUI />
         </>
       )}
     </div>
