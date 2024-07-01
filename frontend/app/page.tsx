@@ -67,45 +67,12 @@ const Home: React.FC = () => {
 
       {!isConnected ? (
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">
+          <h2 className="text-xl text-center font-semibold mb-4">
             Please connect your wallet to proceed.
           </h2>
-          <ConnectButton />
         </div>
       ) : (
         <>
-          {/* <ChainSelector onChainChange={handleChainChange} />
-          {srcChainId && dstChainId && (
-            <QuoteForm
-              srcChainId={srcChainId}
-              dstChainId={dstChainId}
-              onQuote={handleQuote}
-            />
-          )}
-          {quote && (
-            <div className="mt-6">
-              <button
-                onClick={handleParams}
-                className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
-              >
-                Get Transaction Parameters
-              </button>
-              <h2 className="text-xl mt-5 font-semibold mb-4">Bridge Call</h2>
-              <pre className="p-4 bg-gray-100 rounded-lg">
-                <p>Gas Estimation: {quote.routes[0].estimatedGas}</p>
-                <br />
-                {JSON.stringify(params, null, 2)}
-              </pre>
-            </div>
-          )}
-          {!quote && srcChainId && dstChainId && (
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-4">Quote</h2>
-              <pre className="p-4 bg-gray-100 rounded-lg">
-                No quote available for the selected tokens.
-              </pre>
-            </div>
-          )} */}
           <BridgeUI />
         </>
       )}
