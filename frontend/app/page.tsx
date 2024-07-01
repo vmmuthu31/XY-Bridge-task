@@ -1,35 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import ChainSelector from "./components/ChainSelector";
-import QuoteForm from "./components/QuoteForm";
 import { getParams, ParamsData } from "../services/apiService";
 import Navbar from "./components/Navbar";
 import { useAccount } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import BridgeUI from "./components/BridgeUI";
 
 const Home: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
-  const [srcChainId, setSrcChainId] = useState<number | null>(null);
-  const [dstChainId, setDstChainId] = useState<number | null>(null);
   const [params, setParams] = useState<any>(null);
   const { address, isConnected } = useAccount();
   console.log("Address:", address);
-
-  const handleChainChange = (
-    chainId: number,
-    type: "source" | "destination"
-  ) => {
-    if (type === "source") {
-      setSrcChainId(chainId);
-    } else {
-      setDstChainId(chainId);
-    }
-  };
-
-  const handleQuote = async (quoteData: any) => {
-    setQuote(quoteData);
-  };
 
   const handleParams = async () => {
     if (quote) {

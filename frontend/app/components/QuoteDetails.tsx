@@ -7,7 +7,7 @@ const formatTokenAmount = (amount, decimals) => {
     return ethers.utils.formatUnits(amount, decimals);
   } catch (error) {
     console.error("Error formatting token amount:", error);
-    return amount; // Fallback to returning the raw amount
+    return amount;
   }
 };
 

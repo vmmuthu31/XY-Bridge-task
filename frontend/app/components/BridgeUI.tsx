@@ -15,8 +15,8 @@ import "react-toastify/dist/ReactToastify.css";
 import QuoteDetails from "./QuoteDetails";
 
 const BridgeUI: React.FC = () => {
-  const [srcChainId, setSrcChainId] = useState<number>(1); // Default to Ethereum
-  const [dstChainId, setDstChainId] = useState<number>(42161); // Default to Arbitrum
+  const [srcChainId, setSrcChainId] = useState<number>(1);
+  const [dstChainId, setDstChainId] = useState<number>(42161);
   const [srcToken, setSrcToken] = useState<Token | null>(null);
   const [dstToken, setDstToken] = useState<Token | null>(null);
   const [srcAmount, setSrcAmount] = useState("");
@@ -37,7 +37,7 @@ const BridgeUI: React.FC = () => {
       if (srcToken && dstToken && srcAmount) {
         fetchQuote();
       }
-    }, 30000); // 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [srcToken, dstToken, srcAmount]);
@@ -57,7 +57,6 @@ const BridgeUI: React.FC = () => {
       const srcDecimals = srcToken.decimals ?? 18;
       const dstDecimals = dstToken.decimals ?? 18;
 
-      // Convert the input amount to smallest units
       const srcAmountInSmallestUnit = (
         parseFloat(srcAmount) * Math.pow(10, srcDecimals)
       ).toString();
@@ -77,7 +76,6 @@ const BridgeUI: React.FC = () => {
       setQuote(quoteData);
 
       if (quoteData && quoteData[0] && quoteData[0].destAmount) {
-        // Convert the received amount back to human-readable units
         const dstAmountInSmallestUnit = parseFloat(quoteData[0].destAmount);
         const dstAmountInReadableUnit = (
           dstAmountInSmallestUnit / Math.pow(10, dstDecimals)
@@ -102,12 +100,12 @@ const BridgeUI: React.FC = () => {
 
   const handleSrcChainChange = (chain: Chain) => {
     setSrcChainId(chain.chainId);
-    setSrcToken(null); // Reset the selected token when the chain changes
+    setSrcToken(null);
   };
 
   const handleDstChainChange = (chain: Chain) => {
     setDstChainId(chain.chainId);
-    setDstToken(null); // Reset the selected token when the chain changes
+    setDstToken(null);
   };
 
   const handleSrcTokenChange = (token: Token) => {
@@ -126,26 +124,21 @@ const BridgeUI: React.FC = () => {
   };
 
   const handleExchange = async () => {
-    // Swap chains
     const tempChainId = srcChainId;
     setSrcChainId(dstChainId);
     setDstChainId(tempChainId);
 
-    // Swap tokens
     const tempToken = srcToken;
     setSrcToken(dstToken);
     setDstToken(tempToken);
 
-    // Swap amounts
     const tempAmount = srcAmount;
     setSrcAmount(dstAmount);
     setDstAmount(tempAmount);
 
-    // Ensure proper token logos and details are swapped
     handleSrcTokenChange(dstToken);
     handleDstTokenChange(tempToken);
 
-    // Update conversion rate
     await fetchQuote();
   };
 
@@ -176,7 +169,6 @@ const BridgeUI: React.FC = () => {
           setSrcTokenUsdValue(srcTokenPrice * parseFloat(amount));
         }
 
-        // Automatically fetch quote whenever the amount changes
         fetchQuote();
       } catch (error) {
         console.error("Error fetching token price:", error);
@@ -299,7 +291,7 @@ const BridgeUI: React.FC = () => {
                         alt="srcChain"
                         className="w-4 h-4 rounded-full absolute -top-2 -left-1"
                       />
-                      <FaArrowRight className="text-xl text-white" />
+                      <FaArrowRight className="text-xl text-white animate-arrow" />
                       <img
                         src={dstToken?.logoURI}
                         alt="destToken"
@@ -314,6 +306,7 @@ const BridgeUI: React.FC = () => {
                         className="w-4 h-4 absolute left-[76px] -top-2"
                       />
                     </div>
+
                     <div className="h-[400px] overflow-scroll">
                       {sortedQuotes.map((provider, providerKey) => (
                         <QuoteDetails
