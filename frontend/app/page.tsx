@@ -9,7 +9,6 @@ const Home: React.FC = () => {
   const [quote, setQuote] = useState<any>(null);
   const [params, setParams] = useState<any>(null);
   const { address, isConnected } = useAccount();
-  console.log("Address:", address);
 
   const handleParams = async () => {
     if (quote) {
@@ -36,7 +35,6 @@ const Home: React.FC = () => {
             : "",
       };
       const params = await getParams(paramsData);
-      console.log("Transaction Parameters:", params);
       setParams(params);
     }
   };

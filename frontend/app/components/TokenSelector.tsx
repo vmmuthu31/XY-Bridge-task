@@ -18,9 +18,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
     const fetchTokens = async () => {
       if (chainId) {
         try {
-          console.log("Fetching tokens for chain:", chainId);
           const tokensData = await getTokens(chainId);
-          console.log("Fetched tokens:", tokensData);
           setTokens(tokensData);
         } catch (error) {
           console.error("Error fetching tokens:", error);

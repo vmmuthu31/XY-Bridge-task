@@ -7,12 +7,15 @@ import {
   Token,
   getQuote,
   getTokenPrice,
+  getParams,
 } from "../../services/apiService";
 import { FaExchangeAlt, FaSync, FaCog, FaArrowRight } from "react-icons/fa";
 import { chains } from "./utils/chains";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import QuoteDetails from "./QuoteDetails";
+import { useAccount } from "wagmi";
+import { ethers } from "ethers";
 
 const BridgeUI: React.FC = () => {
   const [srcChainId, setSrcChainId] = useState<number>(1);
@@ -26,6 +29,26 @@ const BridgeUI: React.FC = () => {
   const [quote, setQuote] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [userBalance, setUserBalance] = useState("0");
+
+  const { address } = useAccount();
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (srcToken && address) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const balance = await provider.getBalance(address);
+        setUserBalance(ethers.utils.formatUnits(balance, srcToken.decimals));
+      }
+    };
+
+    fetchBalance();
+  }, [srcToken, address]);
+
+  const [isBridgeDisabled, setIsBridgeDisabled] = useState(true);
+  const [selectedQuote, setSelectedQuote] = useState<{
+    quoteKey: string;
+    providerKey: string;
+  } | null>(null);
 
   const [settings, setSettings] = useState({
     slippage: 0.5,
@@ -51,17 +74,24 @@ const BridgeUI: React.FC = () => {
   const fetchQuote = async () => {
     try {
       if (!srcToken || !dstToken) return;
+      const amount = parseFloat(srcAmount);
+      if (isNaN(amount) || !isFinite(amount)) {
+        toast.error("Invalid amount entered");
+        return;
+      }
 
       setIsLoading(true);
+      setIsBridgeDisabled(true);
 
       const srcDecimals = srcToken.decimals ?? 18;
       const dstDecimals = dstToken.decimals ?? 18;
 
       const srcAmountInSmallestUnit = (
-        parseFloat(srcAmount) * Math.pow(10, srcDecimals)
+        amount * Math.pow(10, srcDecimals)
       ).toString();
-
+      const add = address?.toString();
       const params = {
+        add,
         srcChainId,
         srcQuoteTokenAddress: srcToken.address,
         srcQuoteTokenAmount: srcAmountInSmallestUnit,
@@ -82,6 +112,11 @@ const BridgeUI: React.FC = () => {
         ).toFixed(dstDecimals);
 
         setDstAmount(dstAmountInReadableUnit);
+        setIsBridgeDisabled(false);
+
+        const firstKey = Object.keys(quoteData)[0];
+        const firstProviderKey = Object.keys(quoteData[firstKey].quoteRates)[0];
+        setSelectedQuote({ quoteKey: firstKey, providerKey: firstProviderKey });
       }
 
       setIsLoading(false);
@@ -89,6 +124,7 @@ const BridgeUI: React.FC = () => {
       console.error("Error fetching quote:", error);
       toast.error("Error fetching quote");
       setIsLoading(false);
+      setIsBridgeDisabled(true);
     }
   };
 
@@ -142,38 +178,109 @@ const BridgeUI: React.FC = () => {
     await fetchQuote();
   };
 
-  const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const amount = e.target.value;
-    setSrcAmount(amount);
-    if (srcToken) {
-      try {
-        const priceDataSrc = await getTokenPrice(srcToken.address, srcChainId);
-        const priceDataDst = dstToken
-          ? await getTokenPrice(dstToken.address, dstChainId)
-          : null;
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
 
-        const srcTokenPrice = priceDataSrc
-          ? parseFloat(Object.values(priceDataSrc)[0])
-          : NaN;
-        const dstTokenPrice = priceDataDst
-          ? parseFloat(Object.values(priceDataDst)[0])
-          : NaN;
+    if (/^\d*\.?\d*$/.test(value)) {
+      setSrcAmount(value);
 
-        if (priceDataSrc && priceDataDst && dstToken) {
-          setDstAmount(
-            ((parseFloat(amount) * srcTokenPrice) / dstTokenPrice).toFixed(6)
-          );
-          setSrcTokenUsdValue(srcTokenPrice * parseFloat(amount));
-          setDstTokenUsdValue(dstTokenPrice * parseFloat(dstAmount));
-        } else if (priceDataSrc) {
-          setSrcTokenUsdValue(srcTokenPrice * parseFloat(amount));
-        }
-
-        fetchQuote();
-      } catch (error) {
-        console.error("Error fetching token price:", error);
-        toast.error("Error fetching token price");
+      if (srcToken) {
+        getTokenPricesAndQuote(value);
       }
+    }
+  };
+
+  const getTokenPricesAndQuote = async (amount) => {
+    try {
+      const priceDataSrc = await getTokenPrice(srcToken.address, srcChainId);
+      const priceDataDst = dstToken
+        ? await getTokenPrice(dstToken.address, dstChainId)
+        : null;
+
+      const srcTokenPrice = priceDataSrc
+        ? parseFloat(Object.values(priceDataSrc)[0])
+        : NaN;
+      const dstTokenPrice = priceDataDst
+        ? parseFloat(Object.values(priceDataDst)[0])
+        : NaN;
+
+      if (priceDataSrc && priceDataDst && dstToken) {
+        const calculatedDstAmount = (
+          (parseFloat(amount) * srcTokenPrice) /
+          dstTokenPrice
+        ).toFixed(6);
+
+        setDstAmount(calculatedDstAmount);
+        setSrcTokenUsdValue(srcTokenPrice * parseFloat(amount));
+        setDstTokenUsdValue(dstTokenPrice * parseFloat(calculatedDstAmount));
+      } else if (priceDataSrc) {
+        setSrcTokenUsdValue(srcTokenPrice * parseFloat(amount));
+      }
+
+      fetchQuote();
+    } catch (error) {
+      console.error("Error fetching token price:", error);
+      toast.error("Error fetching token price");
+    }
+  };
+
+  const handleQuoteSelect = (quoteKey, providerKey) => {
+    setSelectedQuote({ quoteKey, providerKey });
+  };
+
+  const handleBridge = async (quoteKey, providerKey) => {
+    if (!quoteKey || !srcToken || !dstToken || !srcAmount) return;
+    const selectedProviderList = quote[quoteKey]?.quoteRates;
+    const providerKeys = Object.keys(selectedProviderList);
+    const selectedProvider = selectedProviderList[providerKeys[providerKey]];
+
+    if (
+      !selectedProvider ||
+      !selectedProvider.bridgeDetails ||
+      !selectedProvider.providerDetails
+    ) {
+      toast.error("Bridge or provider details are missing");
+      return;
+    }
+
+    const amountInDecimals = ethers.utils
+      .parseUnits(srcAmount, srcToken.decimals)
+      .toString();
+
+    const payload = [
+      {
+        selectedRoute: `${selectedProvider.providerDetails.name.toLowerCase()}.${selectedProvider.bridgeDetails.name.toLowerCase()}`,
+        account: address,
+        slippage: settings.slippage,
+        srcToken: srcToken.address,
+        srcDecimals: srcToken.decimals,
+        recipient: address,
+        destToken: dstToken.address,
+        destDecimals: dstToken.decimals,
+        fromChain: srcChainId,
+        toChain: dstChainId,
+        additionalInfo: selectedProvider.additionalInfo,
+        amount: amountInDecimals,
+      },
+    ];
+
+    try {
+      const response = await fetch("https://api.dzap.io/v1/bridge/params", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const bridgeParams = await response.json();
+
+      if (!response.ok) {
+        throw new Error(bridgeParams.data?.errMsg || response.statusText);
+      }
+    } catch (error) {
+      console.error("Error calling bridge:", error);
+      toast.error(`Error calling bridge: ${error.message}`);
     }
   };
 
@@ -210,6 +317,7 @@ const BridgeUI: React.FC = () => {
             type="text"
             value={srcAmount}
             onChange={handleAmountChange}
+            disabled={!srcToken || !dstToken}
             className="w-full mt-3 p-2 border text-black border-gray-300 rounded-lg"
             placeholder="Enter amount"
           />
@@ -251,10 +359,35 @@ const BridgeUI: React.FC = () => {
             ~${dstTokenUsdValue ? dstTokenUsdValue.toFixed(2) : "0.00"}
           </p>
         </div>
+        <div className="mt-2 text-red-500">
+          {!srcToken && !dstToken && (
+            <p>Please select both source and destination tokens.</p>
+          )}
+          {parseFloat(srcAmount) > parseFloat(userBalance) && (
+            <p>Insufficient balance to make the transaction.</p>
+          )}
+        </div>
 
         <button
-          disabled={isLoading}
-          className="mt-3 w-full bg-blue-500 p-2 rounded-lg"
+          disabled={
+            isLoading ||
+            parseFloat(srcAmount) > parseFloat(userBalance) ||
+            !srcAmount ||
+            !quote ||
+            !selectedQuote
+          }
+          className={`mt-3 w-full p-2 rounded-lg ${
+            isLoading ||
+            parseFloat(srcAmount) > parseFloat(userBalance) ||
+            !srcAmount ||
+            !quote ||
+            !selectedQuote
+              ? "bg-gray-500"
+              : "bg-blue-500"
+          }`}
+          onClick={() => {
+            handleBridge(selectedQuote?.quoteKey, selectedQuote?.providerKey);
+          }}
         >
           {isLoading ? (
             <p className="text-center text-white">Loading...</p>
@@ -315,6 +448,12 @@ const BridgeUI: React.FC = () => {
                           providerKey={providerKey}
                           provider={provider}
                           isBest={providerKey === 0}
+                          isSelected={
+                            selectedQuote &&
+                            selectedQuote.quoteKey === key &&
+                            selectedQuote.providerKey === providerKey
+                          }
+                          onSelect={handleQuoteSelect}
                         />
                       ))}
                     </div>

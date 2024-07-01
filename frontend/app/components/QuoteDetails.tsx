@@ -11,14 +11,28 @@ const formatTokenAmount = (amount, decimals) => {
   }
 };
 
-const QuoteDetails = ({ quoteKey, providerKey, provider, isBest }) => {
+const QuoteDetails = ({
+  quoteKey,
+  providerKey,
+  provider,
+  isBest,
+  isSelected,
+  onSelect,
+}) => {
   return (
     <div>
       <div
         key={`${quoteKey}-${providerKey}`}
-        className="bg-gray-200 text-gray-800 p-4 rounded-lg mb-4 flex flex-col items-start"
+        className={`bg-gray-200 text-gray-800 p-4 rounded-lg mb-4 flex flex-col items-start ${
+          isSelected ? "border-2 border-green-500" : ""
+        }`}
       >
         <div className="flex gap-2 w-full">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelect(quoteKey, providerKey)}
+          />
           <div className="flex items-center space-x-2">
             <FaGasPump />
             <span>${provider.gasFee.amountUSD.slice(0, 5)}</span>
@@ -34,7 +48,7 @@ const QuoteDetails = ({ quoteKey, providerKey, provider, isBest }) => {
           </div>
           <div className="ml-10">
             {isBest && (
-              <div className="flex items-center  space-x-2 text-green-500">
+              <div className="flex items-center space-x-2 text-green-500">
                 <FaCheckCircle />
                 <span>Best</span>
               </div>
@@ -59,7 +73,7 @@ const QuoteDetails = ({ quoteKey, providerKey, provider, isBest }) => {
             />
           )}
           <span>via </span>
-          {provider.providerDetails.icon && (
+          {provider.providerDetails && provider.providerDetails.icon && (
             <img
               src={provider.providerDetails.icon}
               alt={provider.providerDetails.name}

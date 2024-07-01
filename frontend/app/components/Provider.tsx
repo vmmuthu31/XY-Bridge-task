@@ -1,12 +1,20 @@
 "use client";
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import {
+  arbitrum,
+  base,
+  bsc,
+  mainnet,
+  optimism,
+  polygon,
+  zkSync,
+} from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const config = getDefaultConfig({
   appName: "My RainbowKit App",
   projectId: "YOUR_PROJECT_ID",
-  chains: [mainnet],
+  chains: [mainnet, base, optimism, polygon, bsc, arbitrum, zkSync],
   ssr: true,
 });
 

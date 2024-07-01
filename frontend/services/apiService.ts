@@ -15,6 +15,7 @@ export interface Token {
 }
 
 export interface QuoteParams {
+  address: string | undefined;
   srcChainId: number;
   srcQuoteTokenAddress: string;
   srcQuoteTokenAmount: string;
@@ -50,7 +51,6 @@ export const getTokens = async (chainId: number): Promise<Token[]> => {
     const response = await axios.get(
       `${API_URL}/recommendedtokens?chainId=${chainId}`
     );
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching tokens from API:", error);
@@ -61,7 +61,7 @@ export const getTokens = async (chainId: number): Promise<Token[]> => {
 export const getQuote = async (params: QuoteParams): Promise<any> => {
   const payload = [
     {
-      account: "",
+      account: params.address,
       amount: params.srcQuoteTokenAmount,
       destToken: params.dstQuoteTokenAddress,
       destDecimals: params.dstDecimals,
