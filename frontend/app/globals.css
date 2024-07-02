@@ -22,25 +22,3 @@
   filter: blur(5px);
   pointer-events: none;
 }
-
-.loading-text {
-  font-size: 1.5rem;
-  font-weight: bold;
-  animation: blink 1.5s step-start infinite;
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-.animate-arrow {
-  animation: arrow-blink 1s step-start infinite;
-}
-
-@keyframes arrow-blink {
-  50% {
-    opacity: 0;
-  }
-}

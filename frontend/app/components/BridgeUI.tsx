@@ -59,13 +59,18 @@ const BridgeUI: React.FC = () => {
   useEffect(() => {
     if (srcToken && dstToken && srcAmount) {
       debouncedFetchQuote();
+      const interval = setInterval(() => {
+        debouncedFetchQuote();
+      }, 25000);
+
+      return () => clearInterval(interval);
     }
   }, [srcToken, dstToken, srcAmount]);
 
   const debouncedFetchQuote = useCallback(
     debounce(() => {
       fetchQuote();
-    }, 500),
+    }, 2000),
     [srcToken, dstToken, srcAmount]
   );
 
@@ -122,6 +127,32 @@ const BridgeUI: React.FC = () => {
         const firstKey = Object.keys(quoteData)[0];
         const firstProviderKey = Object.keys(quoteData[firstKey].quoteRates)[0];
         setSelectedQuote({ quoteKey: firstKey, providerKey: firstProviderKey });
+
+        const srcTokenPriceData = await getTokenPrice(
+          srcToken.address,
+          srcChainId
+        );
+        const dstTokenPriceData = await getTokenPrice(
+          dstToken.address,
+          dstChainId
+        );
+
+        const srcTokenPrice = srcTokenPriceData
+          ? parseFloat(Object.values(srcTokenPriceData)[0])
+          : NaN;
+        const dstTokenPrice = dstTokenPriceData
+          ? parseFloat(Object.values(dstTokenPriceData)[0])
+          : NaN;
+
+        if (srcTokenPrice && dstTokenPrice) {
+          setSrcTokenUsdValue(srcTokenPrice * parseFloat(srcAmount));
+          setDstTokenUsdValue(
+            dstTokenPrice * parseFloat(dstAmountInReadableUnit)
+          );
+        } else if (srcTokenPrice) {
+          setSrcTokenUsdValue(srcTokenPrice * parseFloat(srcAmount));
+          setDstTokenUsdValue(0);
+        }
       }
 
       setIsLoading(false);
@@ -191,6 +222,7 @@ const BridgeUI: React.FC = () => {
 
       if (srcToken) {
         getTokenPricesAndQuote(value);
+        debouncedFetchQuote();
       }
     }
   };
@@ -407,13 +439,8 @@ const BridgeUI: React.FC = () => {
       </div>
 
       <div className="relative mt-6">
-        {isLoading && (
-          <div className="absolute top-60  w-full h-full flex items-center justify-center text-black">
-            <span className="loading-text">Loading...</span>
-          </div>
-        )}
-        <div className={`p-4 bg-[#374c6e] text-gray-600 rounded-lg`}>
-          {quote && (
+        {quote && (
+          <div className={`p-4 bg-[#374c6e] text-gray-600 rounded-lg`}>
             <div>
               <h2 className="text-xl mt-5 text-white font-semibold ">
                 Quote Details
@@ -484,8 +511,8 @@ const BridgeUI: React.FC = () => {
                 );
               })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <SettingsModal
