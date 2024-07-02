@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ChainSelector from "./ChainSelector";
 import TokenSelector from "./TokenSelector";
 import SettingsModal from "./SettingsModal";
@@ -7,7 +7,6 @@ import {
   Token,
   getQuote,
   getTokenPrice,
-  getParams,
 } from "../../services/apiService";
 import { FaExchangeAlt, FaSync, FaCog, FaArrowRight } from "react-icons/fa";
 import { chains } from "./utils/chains";
@@ -16,6 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 import QuoteDetails from "./QuoteDetails";
 import { useAccount } from "wagmi";
 import { ethers } from "ethers";
+import debounce from "lodash.debounce";
 
 const BridgeUI: React.FC = () => {
   const [srcChainId, setSrcChainId] = useState<number>(1);
@@ -32,6 +32,7 @@ const BridgeUI: React.FC = () => {
   const [userBalance, setUserBalance] = useState("0");
 
   const { address } = useAccount();
+
   useEffect(() => {
     const fetchBalance = async () => {
       if (srcToken && address) {
@@ -56,14 +57,17 @@ const BridgeUI: React.FC = () => {
   });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (srcToken && dstToken && srcAmount) {
-        fetchQuote();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
+    if (srcToken && dstToken && srcAmount) {
+      debouncedFetchQuote();
+    }
   }, [srcToken, dstToken, srcAmount]);
+
+  const debouncedFetchQuote = useCallback(
+    debounce(() => {
+      fetchQuote();
+    }, 500),
+    [srcToken, dstToken, srcAmount]
+  );
 
   const sortQuotesByGasFee = (quotes) => {
     return quotes.sort(
@@ -86,9 +90,9 @@ const BridgeUI: React.FC = () => {
       const srcDecimals = srcToken.decimals ?? 18;
       const dstDecimals = dstToken.decimals ?? 18;
 
-      const srcAmountInSmallestUnit = (
-        amount * Math.pow(10, srcDecimals)
-      ).toString();
+      const srcAmountInSmallestUnit = ethers.utils
+        .parseUnits(srcAmount, srcDecimals)
+        .toString();
       const add = address?.toString();
       const params = {
         add,
@@ -107,9 +111,10 @@ const BridgeUI: React.FC = () => {
 
       if (quoteData && quoteData[0] && quoteData[0].destAmount) {
         const dstAmountInSmallestUnit = parseFloat(quoteData[0].destAmount);
-        const dstAmountInReadableUnit = (
-          dstAmountInSmallestUnit / Math.pow(10, dstDecimals)
-        ).toFixed(dstDecimals);
+        const dstAmountInReadableUnit = ethers.utils.formatUnits(
+          quoteData[0].destAmount,
+          dstDecimals
+        );
 
         setDstAmount(dstAmountInReadableUnit);
         setIsBridgeDisabled(false);
@@ -231,8 +236,12 @@ const BridgeUI: React.FC = () => {
   const handleBridge = async (quoteKey, providerKey) => {
     if (!quoteKey || !srcToken || !dstToken || !srcAmount) return;
     const selectedProviderList = quote[quoteKey]?.quoteRates;
-    const providerKeys = Object.keys(selectedProviderList);
-    const selectedProvider = selectedProviderList[providerKeys[providerKey]];
+    const providerKeys = selectedProviderList
+      ? Object.keys(selectedProviderList)
+      : [];
+    const selectedProvider = selectedProviderList
+      ? selectedProviderList[providerKeys[providerKey]]
+      : null;
 
     if (
       !selectedProvider ||
@@ -397,20 +406,34 @@ const BridgeUI: React.FC = () => {
         </button>
       </div>
 
-      <div>
-        {quote && (
-          <div className="mt-6">
-            <h2 className="text-xl mt-5 font-semibold mb-4">Quote Details</h2>
-            <p>Best route is selected based on net output after gas fees</p>
-            <div className="p-4 bg-[#374c6e] text-gray-600 rounded-lg">
+      <div className="relative mt-6">
+        {isLoading && (
+          <div className="absolute top-60  w-full h-full flex items-center justify-center text-black">
+            <span className="loading-text">Loading...</span>
+          </div>
+        )}
+        <div className={`p-4 bg-[#374c6e] text-gray-600 rounded-lg`}>
+          {quote && (
+            <div>
+              <h2 className="text-xl mt-5 text-white font-semibold ">
+                Quote Details
+              </h2>
+              <p className="text-white mb-4">
+                Best route is selected based on net output after gas fees
+              </p>
               {Object.keys(quote).map((key) => {
+                if (!quote[key] || !quote[key].quoteRates) {
+                  return null;
+                }
                 const sortedQuotes = sortQuotesByGasFee(
                   Object.values(quote[key].quoteRates)
                 );
 
                 return (
-                  <div key={key}>
-                    <div className="flex items-center space-x-4 mb-4 relative">
+                  <div className={` ${isLoading ? "blurred" : ""}`} key={key}>
+                    <div
+                      className={`flex items-center space-x-4 mb-4 relative`}
+                    >
                       <img
                         src={srcToken?.logoURI}
                         alt="srcToken"
@@ -461,9 +484,10 @@ const BridgeUI: React.FC = () => {
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
       <SettingsModal
         isOpen={isSettingsOpen}
         onRequestClose={() => setIsSettingsOpen(false)}
